@@ -175,6 +175,7 @@ async def startGame(client: discord.Client, reaction: discord.Reaction, game: fu
 
 async def sayUNO(client: discord.Client, channel: discord.TextChannel, message: discord.Message, emojis: dict):
     unoGame: functions.unoGame = currentGames[channel.name]
+    message_sent = False
     for guild in client.guilds:
         for category in guild.categories:
             if category.name == 'UNO':
@@ -188,11 +189,21 @@ async def sayUNO(client: discord.Client, channel: discord.TextChannel, message: 
                             if previousPlayer.user == message.author and len(previousPlayer.hand) == 1:
                                 previousPlayer.uno = True
                                 await unoGame.channel.send('You\'re Safe')
+                                message_sent = True
                             elif previousPlayer.uno == False and len(previousPlayer.hand) == 1:
                                 await unoGame.channel.send(f'{previousPlayer.user.display_name} forgot to say UNO, draw 2')
                                 await drawCard(unoGame, previousPlayer, 2)
                                 previousPlayer.uno = True
+                                message_sent = True
                             currentGames[f'uno-game-{UNOGameCount}'] = unoGame
+                            break
+                    if message_sent:
+                        break
+                if message_sent:
+                    break
+            if message_sent:
+                break
+                    
 
 async def play(client: discord.Client, channel: discord.TextChannel, message: discord.Message, emojis: dict):
     unoGame: functions.unoGame = currentGames[channel.name]
