@@ -167,6 +167,10 @@ async def startGame(client: discord.Client, reaction: discord.Reaction, game: fu
                             await gameChannel.send(playOrderMessage)
                             await gameChannel.send(f'Current Card:')
                             await gameChannel.send(functions.getCardEmoji(unoGame.currentCard.color, unoGame.currentCard.type, unoGame.currentCard.number, emojis))
+                            if unoGame.currentCard.color == 'wild':
+                                unoGame.currentCard.color = 'any'
+                                unoGame.currentCard.number = 11
+                                await gameChannel.send(f'**Any Color may be Played**')
                             await gameChannel.send(f'**It is now {unoGame.currentPlayer.user.mention}\'s Turn**')
                             cards = ''
                             for card in unoGame.currentPlayer.hand:
@@ -263,7 +267,7 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
                                     for card in participant.hand:
                                         card: functions.unoGame.card
                                         if card.color == specifiedCard.color and card.number == specifiedCard.number and card.type == specifiedCard.type:
-                                            if specifiedCard.color == unoGame.currentCard.color or specifiedCard.number == unoGame.currentCard.number or specifiedCard.color == 'wild':
+                                            if specifiedCard.color == unoGame.currentCard.color or specifiedCard.number == unoGame.currentCard.number or specifiedCard.color == 'wild' or specifiedCard.color == 'any':
                                                 # Generic Cards
                                                 if specifiedCard.number != 10:
                                                     await playCard(0, client, unoGame, message, card, specifiedCard, participant, emojis)
@@ -297,7 +301,7 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
                                                         await playCard(5, client, unoGame, message, card, specifiedCard, participant, emojis)
                                                         found2 = True
                                             # If Wild Card Is Current Card
-                                            elif specifiedCard.color == unoGame.currentCard.color and unoGame.currentCard.number == 11:
+                                            elif specifiedCard.color == unoGame.currentCard.color or 'any' and unoGame.currentCard.number == 11:
                                                 # Generic Cards
                                                 if specifiedCard.number != 10:
                                                     await playCard(0, client, unoGame, message, card, specifiedCard, participant, emojis)
