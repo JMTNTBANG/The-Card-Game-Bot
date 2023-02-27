@@ -19,6 +19,6 @@ def import_command():
             await interaction.response.send_message('React with 👍 to start game',ephemeral=True)
             message = await interaction.channel.send(embed=discord.Embed(title=f'{interaction.user.name} would like to start an UNO Game', description='React Below to join'))
             await message.add_reaction('✅')
-            bot.pendingUNOgames.append(functions.unoGame.pending(message, interaction.user))
+            bot.pendingUNOgames.append(functions.unoGame.pending(message, interaction.user,interaction.guild))
         else:
             await interaction.response.send_message(f'Please Contact {interaction.guild.owner.mention} to give the bot the correct permissions', ephemeral=True)
