@@ -30,11 +30,12 @@ class unoGame():
                 self.number = 10
 
     class pending():
-        def __init__(self, message, leader) -> None:
+        def __init__(self, message, leader, guild) -> None:
             self.message: discord.Message = message
             self.leader: discord.Member = leader
+            self.guild: discord.Guild = guild
 
-    def __init__(self, channel, leader, members) -> None:
+    def __init__(self, channel, leader, members, guild) -> None:
         colors = [
             'red',
             'yellow',
@@ -120,9 +121,15 @@ async def checkPerms(guild: discord.Guild):
 
 async def checkForCategory(guild: discord.Guild, name: str):
     exists = False
-    for category in guild.categories:
-        if category.name == name:
+    for categoryy in guild.categories:
+        if categoryy.name == name:
             exists = True
+            if name == 'UNO':
+                for channel in categoryy.channels:
+                    if channel.name.startswith('uno-game'):
+                        for category in guild.categories:
+                            if category.name == 'UNO-ARCHIVE':
+                                await channel.edit(name = f'uno-{int(channel.created_at.timestamp())}', category = category, sync_permissions=True)
 
     if not exists:
         category = await guild.create_category(name)

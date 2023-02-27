@@ -135,43 +135,44 @@ async def playCard(type: int, client: discord.Client, unoGame: functions.unoGame
 
 async def startGame(client: discord.Client, reaction: discord.Reaction, game: functions.unoGame.pending, emojis: dict):
     for guild in client.guilds:
-        global exists
-        exists = False
-        for category in guild.categories:
-            if category.name == 'UNO':
-                exists = True
-                global UNOGameCount
-                UNOGameCount += 1
-                gameChannel = await category.create_text_channel(f'uno-game-{UNOGameCount}')
-                for reactions in reaction.message.reactions:
-                    if reactions.emoji == '✅':
-                        users = []
-                        async for user in reactions.users():
-                            if not user.bot:
-                                users.append(user)
-                        unoGame = functions.unoGame(gameChannel,game.leader,users)
-                        playOrderMessage = 'Current Play Order:'
-                        a = 0
-                        for participant in unoGame.participants:
-                            participant: functions.unoGame.participant
-                            if not participant.user.bot:
-                                thread = await gameChannel.create_thread(name=participant.user.name, type=discord.ChannelType.private_thread)
-                                await thread.send(participant.user.mention)
-                                await showHand(client, participant, thread, emojis)
-                                a += 1
-                                if a == 1:
-                                    playOrderMessage += f'\n{a}: **{participant.user.display_name}**'
-                                    unoGame.currentPlayer = participant
-                                else: playOrderMessage += f'\n{a}: {participant.user.display_name}'
-                        await gameChannel.send(playOrderMessage)
-                        await gameChannel.send(f'Current Card:')
-                        await gameChannel.send(functions.getCardEmoji(unoGame.currentCard.color, unoGame.currentCard.type, unoGame.currentCard.number, emojis))
-                        await gameChannel.send(f'**It is now {unoGame.currentPlayer.user.mention}\'s Turn**')
-                        cards = ''
-                        for card in unoGame.currentPlayer.hand:
-                            cards += '<a:back:1075645084583866368>'
-                        await unoGame.channel.send(cards)
-                        currentGames[f'uno-game-{UNOGameCount}'] = unoGame
+        if guild == game.guild:
+            global exists
+            exists = False
+            for category in guild.categories:
+                if category.name == 'UNO':
+                    exists = True
+                    global UNOGameCount
+                    UNOGameCount += 1
+                    gameChannel = await category.create_text_channel(f'uno-game-{UNOGameCount}')
+                    for reactions in reaction.message.reactions:
+                        if reactions.emoji == '✅':
+                            users = []
+                            async for user in reactions.users():
+                                if not user.bot:
+                                    users.append(user)
+                            unoGame = functions.unoGame(gameChannel,game.leader,users,guild)
+                            playOrderMessage = 'Current Play Order:'
+                            a = 0
+                            for participant in unoGame.participants:
+                                participant: functions.unoGame.participant
+                                if not participant.user.bot:
+                                    thread = await gameChannel.create_thread(name=participant.user.name, type=discord.ChannelType.private_thread)
+                                    await thread.send(participant.user.mention)
+                                    await showHand(client, participant, thread, emojis)
+                                    a += 1
+                                    if a == 1:
+                                        playOrderMessage += f'\n{a}: **{participant.user.display_name}**'
+                                        unoGame.currentPlayer = participant
+                                    else: playOrderMessage += f'\n{a}: {participant.user.display_name}'
+                            await gameChannel.send(playOrderMessage)
+                            await gameChannel.send(f'Current Card:')
+                            await gameChannel.send(functions.getCardEmoji(unoGame.currentCard.color, unoGame.currentCard.type, unoGame.currentCard.number, emojis))
+                            await gameChannel.send(f'**It is now {unoGame.currentPlayer.user.mention}\'s Turn**')
+                            cards = ''
+                            for card in unoGame.currentPlayer.hand:
+                                cards += '<a:back:1075645084583866368>'
+                            await unoGame.channel.send(cards)
+                            currentGames[f'uno-game-{UNOGameCount}'] = unoGame
 
 async def sayUNO(client: discord.Client, channel: discord.TextChannel, message: discord.Message, emojis: dict):
     unoGame: functions.unoGame = currentGames[channel.name]
