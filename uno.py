@@ -227,11 +227,7 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
     ]
     global found
     found = False
-    ''' Check if calling UNO '''
-        
-
-                                    
-    # Check if using Draw Command '''
+    ''' Check if using Draw Command '''
     if message.content.lower() == 'draw':
         for participant in unoGame.participants:
             participant: functions.unoGame.participant
@@ -246,6 +242,21 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
                                     if thread.name == participant.user.display_name:
                                         await showHand(client, participant, thread, emojis)
                                         await message.delete()
+    elif message.content.lower() == 'leave':
+        for participant in unoGame.participants:
+            participant: functions.unoGame.participant
+            if message.author == participant.user and participant == unoGame.currentPlayer:
+                unoGame.participants.remove(participant)
+                await unoGame.channel.send(f'`{participant.user.display_name} has left the game`')
+                for guild in client.guilds:
+                    for category in guild.categories:
+                        if category.name == 'UNO':
+                            for channel in category.text_channels:
+                                for thread in channel.threads:
+                                    if thread.name == participant.user.display_name:
+                                        await thread.send('You have successfully left the game')
+                                        thread.locked = True
+
     else:
         ''' Check If Command represents a Valid Card'''
         for color in colors:
@@ -260,9 +271,12 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
                         found = True
                         global found2
                         found2 = False
+                        global userExists
+                        userExists = False
                         for participant in unoGame.participants:
                             participant: functions.unoGame.participant
                             if message.author == participant.user:
+                                userExists = True
                                 if participant == unoGame.currentPlayer:
                                     for card in participant.hand:
                                         card: functions.unoGame.card
@@ -349,16 +363,19 @@ async def play(client: discord.Client, channel: discord.TextChannel, message: di
                     if found: break
                 if found: break
             if found: break
+        
+        if not userExists:
+            await message.channel.send('you are not in this game')
+        else:
+            if not found:
+                response = await message.channel.send('not a card')
+                await response.delete(delay = 1)
+                await message.delete()
 
-        if not found:
-            response = await message.channel.send('not a card')
-            await response.delete(delay = 1)
-            await message.delete()
-
-        if not found2:
-            response = await message.channel.send('you dont have this card')
-            await response.delete(delay = 1)
-            await message.delete()
+            if not found2:
+                response = await message.channel.send('you dont have this card')
+                await response.delete(delay = 1)
+                await message.delete()
 
 
 
