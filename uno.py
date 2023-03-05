@@ -178,7 +178,19 @@ async def startGame(client: discord.Client, reaction: discord.Reaction, game: fu
                             await unoGame.channel.send(cards)
                             currentGames[f'uno-game-{UNOGameCount}'] = unoGame
 
-async def sayUNO(client: discord.Client, channel: discord.TextChannel, message: discord.Message, emojis: dict):
+async def voteEnd(client: discord.Client, channel: discord.TextChannel, message: discord.Message):
+    unoGame: functions.unoGame = currentGames[channel.name]
+    message_sent = False
+    for guild in client.guilds:
+        for category in guild.categories:
+            if category.name == 'UNO':
+                for channel in category.text_channels:
+                    if channel == unoGame.channel:
+                        unoGame.endMessage = await channel.send(embed=discord.Embed(title='End Game?', description=f'React if you would like to end the game. ({int(len(unoGame.participants)/2)} Votes needed)'))
+                        unoGame.endMessage.add_reaction()
+
+
+async def sayUNO(client: discord.Client, channel: discord.TextChannel, message: discord.Message):
     unoGame: functions.unoGame = currentGames[channel.name]
     message_sent = False
     for guild in client.guilds:

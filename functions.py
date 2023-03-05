@@ -97,6 +97,7 @@ class unoGame():
         drawnCard = random.choice(self.deck)
         self.currentCard: unoGame.card = drawnCard
         self.deck.remove(drawnCard)
+        self.endMessage: discord.Message
 
 # testGame = unoGame(None,None,None)
 # for card in testGame.deck:
