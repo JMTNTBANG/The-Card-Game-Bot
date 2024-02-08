@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "type": "node-terminal",
+            "name": "Deploy Bot",
+            "request": "launch",
+            "command": "npm run deploy",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "node-terminal",
+            "name": "Reload Commands and Deploy Bot",
+            "request": "launch",
+            "command": "npm run reload-commands",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
