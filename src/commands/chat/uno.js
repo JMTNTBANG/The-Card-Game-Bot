@@ -1,3 +1,4 @@
+const fs = require("fs")
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -113,9 +114,24 @@ module.exports = {
     });
   },
   async execute(ctx) {
-    const subcommand = ctx.options.getSubcommand();
-    if (subcommand === "new_game") {
-      this.new_game(ctx);
+    const configFile = JSON.parse(
+      fs.readFileSync("./src/config.json").toString()
+    );
+    if (
+      configFile.guildSettings[ctx.guild.id] &&
+      configFile.guildSettings[ctx.guild.id].uno_category &&
+      configFile.guildSettings[ctx.guild.id].uno_archive_category
+    ) {
+      const subcommand = ctx.options.getSubcommand();
+      if (subcommand === "new_game") {
+        this.new_game(ctx);
+      }
+    } else {
+      await ctx.reply({
+        content:
+          "This bot has not been set up yet, please contact the owner to have them configure it",
+        ephemeral: true,
+      });
     }
   },
 };
