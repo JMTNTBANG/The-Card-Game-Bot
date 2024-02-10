@@ -8,6 +8,7 @@ const {
   ComponentType,
   Events,
 } = require("discord.js");
+const { start_game } = require("../../games/uno");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -104,6 +105,7 @@ module.exports = {
       } else if (lobby_ctx.customId === "start_button") {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
+          await start_game(lobby, ctx.user)
         } else {
           await lobby_ctx.reply({
             content: "You did not Create this Game",
