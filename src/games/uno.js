@@ -1,14 +1,14 @@
 const fs = require("fs");
 const { uno_deck } = require("./static.json");
-const { ChannelType, ThreadAutoArchiveDuration } = require("discord.js");
+const { ChannelType } = require("discord.js");
 
 function print_card(card) {
   if (card.type == "number" && card.color != "wild") {
-    return `\`${card.color[0]}${card.number}\` `;
+    return card.color[0] + card.number;
   } else if (card.number == -1 && card.color == "wild") {
-    return `\`${card.color}\` `;
+    return card.color;
   } else {
-    return `\`${card.color} ${card.type}\` `;
+    return card.color + card.type;
   }
 }
 
@@ -17,9 +17,9 @@ async function show_current_card(game) {
     game.players[game.current_turn].id
   );
   await game.channel.send(
-    `# New Turn\n## Current Card:\n${print_card(
+    `# New Turn\n## Current Card:\n\`${print_card(
       game.current_card
-    )}\n## Current Player:\n${currentPlayerDiscord.toString()}`
+    )}\`\n## Current Player:\n${currentPlayerDiscord.toString()}`
   );
 }
 
@@ -27,10 +27,36 @@ async function show_hands(game) {
   for (player of game.players) {
     let message = "Current Cards:\n";
     for (card of player.hand) {
-      message += print_card(card);
+      message += `\`${print_card(card)}\` `;
     }
     await player.thread.send(message);
   }
+}
+
+async function sent_thread_cmd(game, message) {
+  const player = game.players.filter(
+    (player) =>
+      player.id == message.author.id && player.thread.id == message.channel.id
+  )[0];
+  const cards = player.hand.filter(
+    (card) => print_card(card) == message.content
+  );
+  const card = cards.filter(
+    (card) =>
+      card.color == game.current_card.color ||
+      card.number == game.current_card.number ||
+      card.color == "wild"
+  )[0];
+  if (card == null) return;
+  game.current_card = card;
+  player.hand.splice(player.hand.indexOf(card), 1);
+  if (game.current_turn + 1 < game.players.length) {
+    game.current_turn += 1;
+  } else {
+    game.current_turn = 0;
+  }
+  await show_hands(game);
+  await show_current_card(game);
 }
 
 module.exports = {
@@ -84,5 +110,10 @@ module.exports = {
     );
     await show_hands(game);
     await show_current_card(game);
+    for (player of game.players) {
+      player.thread
+        .createMessageCollector({ filter: (m) => !m.author.bot })
+        .on("collect", (m) => sent_thread_cmd(game, m));
+    }
   },
 };
