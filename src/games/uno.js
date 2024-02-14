@@ -1,9 +1,7 @@
 const fs = require("fs");
 const { uno_deck } = require("./static.json");
-const { ChannelType } = require("discord.js");
+const { ChannelType, ThreadAutoArchiveDuration } = require("discord.js");
 
-function generate_hand(deck) {
-  return hand, deck;
 }
 module.exports = {
   async start_game(lobby, owner) {
@@ -21,10 +19,16 @@ module.exports = {
       }),
     };
     for (player of lobby.embeds[0].data.fields[0].value.split("\n")) {
+      const playerDiscord = await lobby.guild.members.fetch(player.slice(2, -1))
       const new_player = {
         id: player.slice(2, -1),
         hand: [],
+        thread: await game.channel.threads.create({
+          name: playerDiscord.displayName,
+          type: ChannelType.PrivateThread
+        })
       };
+      new_player.thread.send(`<@${new_player.id}>`)
       for (let i = 0; i < 7; i++) {
         const card = Math.floor(Math.random() * game.deck.length);
         new_player.hand.push(game.deck[card]);
