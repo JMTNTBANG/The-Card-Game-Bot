@@ -503,42 +503,42 @@
     {
       "type": "number",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "number",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "number",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "number",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "draw",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "draw",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "draw",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     },
     {
       "type": "draw",
       "number": -1,
-      "color": "black"
+      "color": "wild"
     }
   ]
 }
