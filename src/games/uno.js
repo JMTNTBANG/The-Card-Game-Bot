@@ -2,17 +2,32 @@ const fs = require("fs");
 const { uno_deck } = require("./static.json");
 const { ChannelType, ThreadAutoArchiveDuration } = require("discord.js");
 
+function print_card(card) {
+  if (card.type == "number" && card.color != "wild") {
+    return `\`${card.color[0]}${card.number}\` `;
+  } else if (card.number == -1 && card.color == "wild") {
+    return `\`${card.color}\` `;
+  } else {
+    return `\`${card.color} ${card.type}\` `;
+  }
+}
+
+async function show_current_card(game) {
+  const currentPlayerDiscord = await game.guild.members.fetch(
+    game.players[game.current_turn].id
+  );
+  await game.channel.send(
+    `# New Turn\n## Current Card:\n${print_card(
+      game.current_card
+    )}\n## Current Player:\n${currentPlayerDiscord.toString()}`
+  );
+}
+
 async function show_hands(game) {
   for (player of game.players) {
     let message = "Current Cards:\n";
     for (card of player.hand) {
-      if (card.type == "number" && card.color != "wild") {
-        message += `\`${card.color[0]}${card.number}\` `;
-      } else if (card.number == -1 && card.color == "wild") {
-        message += `\`${card.color}\` `;
-      } else {
-        message += `\`${card.color} ${card.type}\` `;
-      }
+      message += print_card(card);
     }
     await player.thread.send(message);
   }
@@ -27,6 +42,9 @@ module.exports = {
       owner: owner.id,
       players: [],
       deck: uno_deck,
+      current_turn: 0,
+      guild: lobby.guild,
+      reversed: false,
       channel: await lobby.guild.channels.create({
         name: `${owner.displayName}s Game`,
         type: ChannelType.GuildText,
@@ -53,6 +71,9 @@ module.exports = {
       }
       game.players.push(new_player);
     }
+    const card = Math.floor(Math.random() * game.deck.length);
+    game.current_card = game.deck[card];
+    game.deck.splice(card, 1);
     var activeGames = JSON.parse(
       fs.readFileSync("./src/active-games.json").toString()
     );
@@ -62,5 +83,6 @@ module.exports = {
       JSON.stringify(activeGames, "", 2)
     );
     await show_hands(game);
+    await show_current_card(game);
   },
 };
