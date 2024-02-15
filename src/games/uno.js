@@ -34,6 +34,7 @@ async function show_current_card(game) {
   await game.channel.send(
     `# New Turn\n## Current Card:\n\`${card}\`\n## Current Player:\n${currentPlayerDiscord.toString()}`
   );
+  game.card_counter = await game.channel.send(`\`Current Player has ${game.players[game.current_turn].hand.length} Cards\``)
 }
 
 async function show_hands(game, definedPlayer = undefined) {
@@ -66,6 +67,7 @@ async function sent_thread_cmd(game, message) {
       });
     player.hand = hand;
     await show_hands(game, player);
+    game.card_counter.edit(`\`Current Player has ${player.hand.length} Cards\``)
   } else;
   const cards = player.hand.filter(
     (card) => message.content.startsWith(print_card(card))
