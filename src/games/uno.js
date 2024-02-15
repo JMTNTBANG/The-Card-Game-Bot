@@ -6,7 +6,7 @@ function print_card(card) {
   if (card.type == "number" && card.color != "wild") {
     return card.color[0] + card.number;
   } else if (card.type == "draw" && card.color == "wild") {
-    return card.color + card.type
+    return card.color + card.type;
   } else if (card.number == -1 && card.color == "wild") {
     return card.color;
   } else {
@@ -34,7 +34,11 @@ async function show_current_card(game) {
   await game.channel.send(
     `# New Turn\n## Current Card:\n\`${card}\`\n## Current Player:\n${currentPlayerDiscord.toString()}`
   );
-  game.card_counter = await game.channel.send(`\`Current Player has ${game.players[game.current_turn].hand.length} Cards\``)
+  game.card_counter = await game.channel.send(
+    `\`Current Player has ${
+      game.players[game.current_turn].hand.length
+    } Cards\``
+  );
 }
 
 async function show_hands(game, definedPlayer = undefined) {
@@ -67,10 +71,12 @@ async function sent_thread_cmd(game, message) {
       });
     player.hand = hand;
     await show_hands(game, player);
-    game.card_counter.edit(`\`Current Player has ${player.hand.length} Cards\``)
+    game.card_counter.edit(
+      `\`Current Player has ${player.hand.length} Cards\``
+    );
   } else;
-  const cards = player.hand.filter(
-    (card) => message.content.startsWith(print_card(card))
+  const cards = player.hand.filter((card) =>
+    message.content.startsWith(print_card(card))
   );
   const card = cards.filter(
     (card) =>
