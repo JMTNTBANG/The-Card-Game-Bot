@@ -26,7 +26,7 @@ function draw_card(amt, hand, deck) {
 async function show_current_card(game) {
   var card = print_card(game.current_card);
   if (game.current_card.number == -2) {
-    card = `wild ${card.color}`;
+    card = `wild ${game.current_card.color}`;
   }
   const currentPlayerDiscord = await game.guild.members.fetch(
     game.players[game.current_turn].id
