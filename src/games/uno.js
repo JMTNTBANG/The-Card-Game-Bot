@@ -55,6 +55,42 @@ async function show_hands(game, definedPlayer = undefined) {
     });
 }
 
+async function sent_game_cmd(game, message) {
+  const player = game.players.filter(
+    (player) => player.id == message.author.id
+  )[0];
+  var last_player = game.current_turn;
+      if (last_player - 1 > -1 ) {
+        last_player -= 1;
+      } else {
+        last_player = game.players.length - 1;
+      }
+  if (message.content == "uno") {
+    if (game.players[last_player].hand.length == 1) {
+      if (player == game.players[last_player]) {
+        player.said_uno = true;
+        await game.channel.send(`You Are Safe`);
+      } else if (game.players[last_player].said_uno == false) {
+        await game.channel.send(`Someone else beat you to it! Draw 2 Cards`);
+        var hand = draw_card(
+          2,
+          game.players[last_player].hand,
+          game.deck
+        );
+        hand
+          .filter(
+            (card) => !game.players[last_player].hand.includes(card)
+          )
+          .forEach((card) => {
+            game.deck.splice(hand.indexOf(card), 1);
+          });
+        game.players[last_player].hand = hand;
+        await show_hands(game, game.players[last_player]);
+      }
+    }
+  }
+}
+
 async function sent_thread_cmd(game, message) {
   const player = game.players.filter(
     (player) =>
@@ -71,6 +107,7 @@ async function sent_thread_cmd(game, message) {
         game.deck.splice(hand.indexOf(card), 1);
       });
     player.hand = hand;
+    player.said_uno = false;
     await show_hands(game, player);
     game.card_counter.edit(
       `\`Current Player has ${player.hand.length} Cards\``
@@ -112,7 +149,7 @@ async function sent_thread_cmd(game, message) {
           game.deck.splice(hand.indexOf(card), 1);
         });
       game.players[next_player].hand = hand;
-      game.current_turn = next_player;
+      game.players[next_player].said_uno = false;
     }
   }
   switch (card.type) {
@@ -140,6 +177,7 @@ async function sent_thread_cmd(game, message) {
           game.deck.splice(hand.indexOf(card), 1);
         });
       game.players[next_player].hand = hand;
+      game.players[next_player].said_uno = false;
       game.current_turn = next_player;
       break;
   }
@@ -192,6 +230,7 @@ module.exports = {
           game.deck.splice(hand.indexOf(card), 1);
         });
       new_player.hand = hand;
+      new_player.said_uno = false;
       game.players.push(new_player);
     }
     const card = Math.floor(Math.random() * game.deck.length);
@@ -212,5 +251,8 @@ module.exports = {
         .createMessageCollector({ filter: (m) => !m.author.bot })
         .on("collect", (m) => sent_thread_cmd(game, m));
     }
+    game.channel
+      .createMessageCollector({ filter: (m) => !m.author.bot })
+      .on("collect", (m) => sent_game_cmd(game, m));
   },
 };
