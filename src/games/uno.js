@@ -62,6 +62,7 @@ async function sent_thread_cmd(game, message) {
       player.thread.id == message.channel.id &&
       game.current_turn == game.players.indexOf(player)
   )[0];
+  if (player == null) return;
   if (message.content == "draw") {
     var hand = draw_card(1, player.hand, game.deck);
     hand
