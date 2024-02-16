@@ -105,6 +105,7 @@ module.exports = {
       } else if (lobby_ctx.customId === "start_button") {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
+          collector.stop()
           await start_game(lobby, ctx.user)
         } else {
           await lobby_ctx.reply({

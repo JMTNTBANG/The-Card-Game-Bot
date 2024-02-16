@@ -24,6 +24,7 @@ function draw_card(amt, hand, deck) {
 }
 
 async function show_current_card(game) {
+  const winner = game.players.filter((player) => player.hand.length == 0)[0]
   var card = print_card(game.current_card);
   if (game.current_card.number == -2) {
     card = `wild ${game.current_card.color}`;
@@ -39,6 +40,16 @@ async function show_current_card(game) {
       game.players[game.current_turn].hand.length
     } Cards\``
   );
+  if (winner != null) {
+    await game.channel.send(`# <@${winner.id}> Wins!!`)
+    game.msgCollector.stop()
+    for (player of game.players) {
+      player.msgCollector.stop()
+    }
+    if (game.archive != null) {
+      game.channel.edit({name: `uno-${game.id}`, parent: game.archive})
+    }
+  }
 }
 
 async function show_hands(game, definedPlayer = undefined) {
@@ -204,6 +215,7 @@ module.exports = {
       current_turn: 0,
       guild: lobby.guild,
       reversed: false,
+      archive: guildSettings.uno_archive_category,
       channel: await lobby.guild.channels.create({
         name: `${owner.displayName}s Game`,
         type: ChannelType.GuildText,
@@ -247,11 +259,11 @@ module.exports = {
     await show_hands(game);
     await show_current_card(game);
     for (player of game.players) {
-      player.thread
+      player.msgCollector = player.thread
         .createMessageCollector({ filter: (m) => !m.author.bot })
         .on("collect", (m) => sent_thread_cmd(game, m));
     }
-    game.channel
+    game.msgCollector = game.channel
       .createMessageCollector({ filter: (m) => !m.author.bot })
       .on("collect", (m) => sent_game_cmd(game, m));
   },
