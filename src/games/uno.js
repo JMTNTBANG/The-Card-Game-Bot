@@ -248,14 +248,6 @@ module.exports = {
     const card = Math.floor(Math.random() * game.deck.length);
     game.current_card = game.deck[card];
     game.deck.splice(card, 1);
-    var activeGames = JSON.parse(
-      fs.readFileSync("./src/active-games.json").toString()
-    );
-    activeGames.uno[game.id] = game;
-    fs.writeFileSync(
-      "./src/active-games.json",
-      JSON.stringify(activeGames, "", 2)
-    );
     await show_hands(game);
     await show_current_card(game);
     for (player of game.players) {
