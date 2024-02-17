@@ -27,7 +27,11 @@ async function show_current_card(game) {
   const winner = game.players.filter((player) => player.hand.length == 0)[0]
   var card = print_card(game.current_card);
   if (game.current_card.number == -2) {
-    card = `wild ${game.current_card.color}`;
+    if (game.current_card.type == "draw") {
+      card = `wild draw ${game.current_card.color}`
+    } else {
+      card = `wild ${game.current_card.color}`;
+    }
   }
   const currentPlayerDiscord = await game.guild.members.fetch(
     game.players[game.current_turn].id
