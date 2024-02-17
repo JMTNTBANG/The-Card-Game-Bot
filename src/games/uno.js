@@ -67,6 +67,9 @@ async function show_hands(game, definedPlayer = undefined) {
 }
 
 async function sent_game_cmd(game, message) {
+  if (game.deck.length == 0) {
+    game.deck = uno_deck
+  }
   const player = game.players.filter(
     (player) => player.id == message.author.id
   )[0];
