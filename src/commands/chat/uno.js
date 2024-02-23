@@ -1,4 +1,4 @@
-const fs = require("fs")
+const fs = require("fs");
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -15,9 +15,19 @@ module.exports = {
     .setName("uno")
     .setDescription("UNO Related Commands")
     .addSubcommand((subcommand) =>
-      subcommand.setName("new_game").setDescription("Create a New UNO Game")
+      subcommand
+        .setName("new_game")
+        .setDescription("Create a New UNO Game")
+        .addIntegerOption((option) =>
+          option
+            .setName("timer")
+            .setDescription(
+              "How Long Before the Lobby Expires in seconds (Default 10 Minutes)"
+            )
+            .setRequired(false)
+        )
     ),
-  async new_game(ctx) {
+  async new_game(ctx, timer) {
     var embed = new EmbedBuilder()
       .setAuthor({
         name: ctx.user.displayName,
@@ -30,7 +40,7 @@ module.exports = {
         { name: "Player List", value: ctx.user.toString() },
         {
           name: "Expiration",
-          value: `Lobby Expires <t:${Math.floor(Date.now() / 1000 + 600)}:R>`,
+          value: `Lobby Expires <t:${Math.floor(Date.now() / 1000 + timer)}:R>`,
         }
       );
     const buttons = new ActionRowBuilder().addComponents(
@@ -57,7 +67,7 @@ module.exports = {
     });
     const collector = lobby.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 600_000,
+      time: timer * 1_000,
     });
     collector.on("collect", async (lobby_ctx) => {
       if (lobby_ctx.customId === "join_button") {
@@ -105,8 +115,8 @@ module.exports = {
       } else if (lobby_ctx.customId === "start_button") {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
-          collector.stop()
-          await start_game(lobby, ctx.user)
+          collector.stop();
+          await start_game(lobby, ctx.user);
         } else {
           await lobby_ctx.reply({
             content: "You did not Create this Game",
@@ -127,7 +137,18 @@ module.exports = {
     ) {
       const subcommand = ctx.options.getSubcommand();
       if (subcommand === "new_game") {
-        this.new_game(ctx);
+        var timer = ctx.options.getInteger("timer");
+        if (!timer) {
+          timer = 600;
+        } else if (timer > 21600) {
+          ctx.reply({
+            content:
+              "Please Select an amount less than `6 Hours (21600 Seconds)`",
+            ephemeral: true,
+          });
+          return;
+        }
+        this.new_game(ctx, timer);
       }
     } else {
       await ctx.reply({
