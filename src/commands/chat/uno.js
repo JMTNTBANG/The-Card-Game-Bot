@@ -133,7 +133,8 @@ module.exports = {
     if (
       configFile.guildSettings[ctx.guild.id] &&
       configFile.guildSettings[ctx.guild.id].uno_category &&
-      configFile.guildSettings[ctx.guild.id].uno_archive_category
+      configFile.guildSettings[ctx.guild.id].uno_archive_category &&
+      configFile.guildSettings[ctx.guild.id].game_end_delay
     ) {
       const subcommand = ctx.options.getSubcommand();
       if (subcommand === "new_game") {

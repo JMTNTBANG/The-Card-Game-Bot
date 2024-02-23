@@ -38,6 +38,19 @@ module.exports = {
             )
             .setRequired(false)
         )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("game_end_delay")
+        .setDescription(
+          "How Long After a Game end that it will be Archived/Deleted (Default 5 Minutes)"
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("duration")
+            .setDescription("Duration in Seconds")
+            .setRequired(true)
+        )
     ),
   async uno_category(ctx, category) {
     const channel = await ctx.client.channels.fetch(category);
@@ -67,9 +80,6 @@ module.exports = {
       if (category != null) {
         var channel = await ctx.client.channels.fetch(category);
         if (channel.type == ChannelType.GuildCategory) {
-          if (!configFile.guildSettings[ctx.guild.id]) {
-            configFile.guildSettings[ctx.guild.id] = {};
-          }
           configFile.guildSettings[ctx.guild.id]["uno_archive_category"] =
             category;
           reply = `Successfully Set \`${channel.name}\` as your UNO Archive Category!`;
@@ -80,9 +90,6 @@ module.exports = {
         reply = "Please Specify a Category ID";
       }
     } else {
-      if (!configFile.guildSettings[ctx.guild.id]) {
-        configFile.guildSettings[ctx.guild.id] = {};
-      }
       configFile.guildSettings[ctx.guild.id]["uno_archive_category"] = null;
       reply = "Successfully Disabled Game Archival";
     }
@@ -92,7 +99,32 @@ module.exports = {
       ephemeral: true,
     });
   },
+  async game_end_delay(ctx, duration) {
+    if (duration < 0) {
+      ctx.reply({
+        content: "Please Choose a Positive Number",
+        ephemeral: true,
+      });
+      return;
+    }
+    var configFile = JSON.parse(
+      fs.readFileSync("./src/config.json").toString()
+    );
+    configFile.guildSettings[ctx.guild.id]["game_end_delay"] = duration;
+    ctx.reply({
+      content: `Successfully Changed the Game End Delay to \`${duration} seconds\``,
+      ephemeral: true
+    });
+    fs.writeFileSync("./src/config.json", JSON.stringify(configFile, "", 2));
+  },
   async execute(ctx) {
+    var configFile = JSON.parse(
+      fs.readFileSync("./src/config.json").toString()
+    );
+    if (!configFile.guildSettings[ctx.guild.id]) {
+      configFile.guildSettings[ctx.guild.id] = { game_end_delay: 300 };
+      fs.writeFileSync("./src/config.json", JSON.stringify(configFile, "", 2));
+    }
     const subcommand = ctx.options.getSubcommand();
     if (subcommand === "uno_category") {
       this.uno_category(ctx, ctx.options.getString("category_id"));
@@ -102,6 +134,8 @@ module.exports = {
         ctx.options.getBoolean("enabled"),
         ctx.options.getString("category_id")
       );
+    } else if (subcommand === "game_end_delay") {
+      this.game_end_delay(ctx, ctx.options.getInteger("duration"));
     }
   },
 };
