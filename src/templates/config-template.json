@@ -1,5 +1,7 @@
 {
-    "token": "Discord Bot Token",
-    "clientId": "Discord Bot Application ID",
+    "token": "[Discord Bot Token]",
+    "clientId": "[Discord Bot Application ID]",
+    "patreonToken": "[Patreon Token]",
+    "defaultStatus": "UNO in Discord!",
     "guildSettings": {}
 }
