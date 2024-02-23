@@ -56,6 +56,8 @@ async function show_current_card(game) {
     setTimeout(function() {
       if (game.archive != null) {
         game.channel.edit({name: `uno-${game.id}`, parent: game.archive})
+      } else {
+        game.channel.delete({reason: "Game End"})
       }
     }, configFile.guildSettings[game.guild.id].game_end_delay * 1000)
   }
