@@ -74,33 +74,27 @@ async function sent_game_cmd(game, message) {
   const player = game.players.filter(
     (player) => player.id == message.author.id
   )[0];
-  var last_player = game.current_turn;
-      if (last_player - 1 > -1 ) {
-        last_player -= 1;
-      } else {
-        last_player = game.players.length - 1;
-      }
   if (message.content == "uno") {
-    if (game.players[last_player].hand.length == 1) {
-      if (player == game.players[last_player]) {
+    if (game.players[game.last_player].hand.length == 1) {
+      if (player == game.players[game.last_player]) {
         player.said_uno = true;
         await game.channel.send(`You Are Safe`);
-      } else if (game.players[last_player].said_uno == false) {
+      } else if (game.players[game.last_player].said_uno == false) {
         await game.channel.send(`Someone else beat you to it! Draw 2 Cards`);
         var hand = draw_card(
           2,
-          game.players[last_player].hand,
+          game.players[game.last_player].hand,
           game.deck
         );
         hand
           .filter(
-            (card) => !game.players[last_player].hand.includes(card)
+            (card) => !game.players[game.last_player].hand.includes(card)
           )
           .forEach((card) => {
             game.deck.splice(hand.indexOf(card), 1);
           });
-        game.players[last_player].hand = hand;
-        await show_hands(game, game.players[last_player]);
+        game.players[game.last_player].hand = hand;
+        await show_hands(game, game.players[game.last_player]);
       }
     }
   }
@@ -170,6 +164,7 @@ async function sent_thread_cmd(game, message) {
       game.players[next_player].said_uno = false;
     }
   }
+  game.last_player = game.current_turn
   switch (card.type) {
     case "skip":
       if (game.current_turn + 1 < game.players.length) {
