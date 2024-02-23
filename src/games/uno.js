@@ -45,14 +45,21 @@ async function show_current_card(game) {
     } Cards\``
   );
   if (winner != null) {
+    var configFile = JSON.parse(
+      fs.readFileSync("./src/config.json").toString()
+    );
     await game.channel.send(`# <@${winner.id}> Wins!!`)
     game.msgCollector.stop()
     for (player of game.players) {
       player.msgCollector.stop()
     }
-    if (game.archive != null) {
-      game.channel.edit({name: `uno-${game.id}`, parent: game.archive})
-    }
+    setTimeout(function() {
+      if (game.archive != null) {
+        game.channel.edit({name: `uno-${game.id}`, parent: game.archive})
+      } else {
+        game.channel.delete({reason: "Game End"})
+      }
+    }, configFile.guildSettings[game.guild.id].game_end_delay * 1000)
   }
 }
 
