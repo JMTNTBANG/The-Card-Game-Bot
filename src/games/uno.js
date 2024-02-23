@@ -179,7 +179,9 @@ async function sent_thread_cmd(game, message) {
       }
       break;
     case "reverse":
+      const currentPlayer = game.players[game.current_turn]
       game.players.reverse();
+      game.current_turn = game.players.indexOf(currentPlayer)
       break;
     case "draw":
       var next_player = game.current_turn;
