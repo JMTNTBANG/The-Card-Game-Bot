@@ -138,7 +138,8 @@ async function sent_thread_cmd(game, message) {
   const card = cards.filter(
     (card) =>
       card.color == game.current_card.color ||
-      card.number == game.current_card.number ||
+      card.number == game.current_card.number && card.number != -1 ||
+      card.type == game.current_card.type && card.number == -1 ||
       card.color == "wild" ||
       game.current_card.color == "wild"
   )[0];
