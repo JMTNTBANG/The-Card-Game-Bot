@@ -1,7 +1,37 @@
 {
-    "token": "[Discord Bot Token]",
-    "clientId": "[Discord Bot Application ID]",
-    "patreonToken": "[Patreon Token]",
-    "defaultStatus": "UNO in Discord!",
-    "guildSettings": {}
+  "token": "[Discord Bot Token]",
+  "clientId": "[Discord Bot Application ID]",
+  "patreonToken": "[Patreon Token]",
+  "defaultStatus": "UNO in Discord!",
+  "assets": {
+    "uno": {
+      "colors": {
+        "red": "[Emoji Code]",
+        "yellow": "[Emoji Code]",
+        "green": "[Emoji Code]",
+        "blue": "[Emoji Code]",
+        "wild": "[Emoji Code]"
+      },
+      "numbers": {
+        "0": "[Emoji Code]",
+        "1": "[Emoji Code]",
+        "2": "[Emoji Code]",
+        "3": "[Emoji Code]",
+        "4": "[Emoji Code]",
+        "5": "[Emoji Code]",
+        "6": "[Emoji Code]",
+        "7": "[Emoji Code]",
+        "8": "[Emoji Code]",
+        "9": "[Emoji Code]"
+      },
+      "special": {
+        "skip": "[Emoji Code]",
+        "reverse": "[Emoji Code]",
+        "draw": "[Emoji Code]",
+        "draw4": "[Emoji Code]",
+        "blank": "[Emoji Code]"
+      }
+    }
+  },
+  "guildSettings": {}
 }
