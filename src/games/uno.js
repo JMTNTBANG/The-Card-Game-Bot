@@ -1,16 +1,48 @@
 const fs = require("fs");
 const { uno_deck } = require("./static.json");
 const { ChannelType } = require("discord.js");
+const { assets } = require("../config.json");
 
-function print_card(card) {
+function print_card(card, text = false) {
   if (card.type == "number" && card.color != "wild") {
-    return card.color[0] + card.number;
+    var colorAsset = assets.uno.colors[card.color];
+    var numberAsset = assets.uno.numbers[card.number];
+    if (text) {
+      colorAsset = card.color[0];
+      numberAsset = card.number;
+    }
+    return { row1: colorAsset, row2: numberAsset };
   } else if (card.type == "draw" && card.color == "wild") {
-    return card.color + card.type;
+    var colorAsset = assets.uno.colors[card.color];
+    var numberAsset = assets.uno.special["draw4"];
+    if (text) {
+      colorAsset = card.color;
+      numberAsset = card.type;
+    }
+    return { row1: colorAsset, row2: numberAsset };
   } else if (card.number == -1 && card.color == "wild") {
-    return card.color;
+    var colorAsset = assets.uno.colors[card.color];
+    var numberAsset = assets.uno.special["blank"];
+    if (text) {
+      colorAsset = card.color;
+      numberAsset = "";
+    }
+    return { row1: colorAsset, row2: numberAsset };
+  } else if (card.number == -2) {
+    const colorAsset = assets.uno.colors[card.color];
+    var numberAsset = assets.uno.special["blank"];
+    if (card.type == "draw") {
+      numberAsset = assets.uno.special["draw4"];
+    }
+    return { row1: colorAsset, row2: numberAsset };
   } else {
-    return card.color + card.type;
+    var colorAsset = assets.uno.colors[card.color];
+    var numberAsset = assets.uno.special[card.type];
+    if (text) {
+      colorAsset = card.color;
+      numberAsset = card.type;
+    }
+    return { row1: colorAsset, row2: numberAsset };
   }
 }
 
@@ -24,20 +56,15 @@ function draw_card(amt, hand, deck) {
 }
 
 async function show_current_card(game) {
-  const winner = game.players.filter((player) => player.hand.length == 0)[0]
+  const winner = game.players.filter((player) => player.hand.length == 0)[0];
   var card = print_card(game.current_card);
-  if (game.current_card.number == -2) {
-    if (game.current_card.type == "draw") {
-      card = `wild draw ${game.current_card.color}`
-    } else {
-      card = `wild ${game.current_card.color}`;
-    }
-  }
   const currentPlayerDiscord = await game.guild.members.fetch(
     game.players[game.current_turn].id
   );
+  await game.channel.send(`# New Turn\n## Current Card:`);
+  await game.channel.send(`${card.row1}\n${card.row2}`);
   await game.channel.send(
-    `# New Turn\n## Current Card:\n\`${card}\`\n## Current Player:\n${currentPlayerDiscord.toString()}`
+    `## Current Player:\n${currentPlayerDiscord.toString()}`
   );
   game.card_counter = await game.channel.send(
     `\`Current Player has ${
@@ -48,18 +75,18 @@ async function show_current_card(game) {
     var configFile = JSON.parse(
       fs.readFileSync("./src/config.json").toString()
     );
-    await game.channel.send(`# <@${winner.id}> Wins!!`)
-    game.msgCollector.stop()
+    await game.channel.send(`# <@${winner.id}> Wins!!`);
+    game.msgCollector.stop();
     for (player of game.players) {
-      player.msgCollector.stop()
+      player.msgCollector.stop();
     }
-    setTimeout(function() {
+    setTimeout(function () {
       if (game.archive != null) {
-        game.channel.edit({name: `uno-${game.id}`, parent: game.archive})
+        game.channel.edit({ name: `uno-${game.id}`, parent: game.archive });
       } else {
-        game.channel.delete({reason: "Game End"})
+        game.channel.delete({ reason: "Game End" });
       }
-    }, configFile.guildSettings[game.guild.id].game_end_delay * 1000)
+    }, configFile.guildSettings[game.guild.id].game_end_delay * 1000);
   }
 }
 
@@ -69,10 +96,24 @@ async function show_hands(game, definedPlayer = undefined) {
       (player) => definedPlayer == undefined || player.id == definedPlayer.id
     )
     .forEach(async (player) => {
-      let message = "Current Cards:\n";
+      await player.thread.send("Current Cards:");
+      let message = "";
+      let row1 = "";
+      let row2 = "";
+      let i = 0;
       player.hand.forEach((card) => {
-        message += `\`${print_card(card)}\` `;
+        if (i == 5) {
+          message += `${row1}\n${row2}\n`;
+          row1 = "";
+          row2 = "";
+          i = 0;
+        }
+        const cardObj = print_card(card);
+        row1 += `${cardObj.row1} `;
+        row2 += `${cardObj.row2} `;
+        i++;
       });
+      message += `${row1}\n${row2}\n`;
       await player.thread.send(message);
     });
 }
@@ -88,15 +129,9 @@ async function sent_game_cmd(game, message) {
         await game.channel.send(`You Are Safe`);
       } else if (game.players[game.last_player].said_uno == false) {
         await game.channel.send(`Someone else beat you to it! Draw 2 Cards`);
-        var hand = draw_card(
-          2,
-          game.players[game.last_player].hand,
-          game.deck
-        );
+        var hand = draw_card(2, game.players[game.last_player].hand, game.deck);
         hand
-          .filter(
-            (card) => !game.players[game.last_player].hand.includes(card)
-          )
+          .filter((card) => !game.players[game.last_player].hand.includes(card))
           .forEach((card) => {
             game.deck.splice(hand.indexOf(card), 1);
           });
@@ -109,7 +144,7 @@ async function sent_game_cmd(game, message) {
 
 async function sent_thread_cmd(game, message) {
   if (game.deck.length == 0) {
-    game.deck = uno_deck
+    game.deck = uno_deck;
   }
   const player = game.players.filter(
     (player) =>
@@ -133,13 +168,15 @@ async function sent_thread_cmd(game, message) {
     );
   } else;
   const cards = player.hand.filter((card) =>
-    message.content.startsWith(print_card(card))
+    message.content.startsWith(
+      print_card(card, true).row1 + print_card(card, true).row2
+    )
   );
   const card = cards.filter(
     (card) =>
       card.color == game.current_card.color ||
-      card.number == game.current_card.number && card.number != -1 ||
-      card.type == game.current_card.type && card.number == -1 ||
+      (card.number == game.current_card.number && card.number != -1) ||
+      (card.type == game.current_card.type && card.number == -1) ||
       card.color == "wild" ||
       game.current_card.color == "wild"
   )[0];
@@ -172,7 +209,7 @@ async function sent_thread_cmd(game, message) {
       game.players[next_player].said_uno = false;
     }
   }
-  game.last_player = game.current_turn
+  game.last_player = game.current_turn;
   switch (card.type) {
     case "skip":
       if (game.current_turn + 1 < game.players.length) {
@@ -182,9 +219,9 @@ async function sent_thread_cmd(game, message) {
       }
       break;
     case "reverse":
-      const currentPlayer = game.players[game.current_turn]
+      const currentPlayer = game.players[game.current_turn];
       game.players.reverse();
-      game.current_turn = game.players.indexOf(currentPlayer)
+      game.current_turn = game.players.indexOf(currentPlayer);
       break;
     case "draw":
       var next_player = game.current_turn;
@@ -216,7 +253,7 @@ async function sent_thread_cmd(game, message) {
 }
 
 module.exports = {
-  async start_game(lobby, owner) {
+  async start_game(lobby, owner, homeGuild) {
     const configFile = JSON.parse(fs.readFileSync("./src/config.json"));
     const guildSettings = configFile.guildSettings[lobby.guild.id];
     const game = {
@@ -226,7 +263,7 @@ module.exports = {
       deck: uno_deck,
       current_turn: 0,
       guild: lobby.guild,
-      reversed: false,
+      bot_home_guild: homeGuild,
       archive: guildSettings.uno_archive_category,
       channel: await lobby.guild.channels.create({
         name: `${owner.displayName}s Game`,
