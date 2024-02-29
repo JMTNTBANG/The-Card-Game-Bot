@@ -283,7 +283,7 @@ module.exports = {
           type: ChannelType.PrivateThread,
         }),
       };
-      new_player.thread.send(`<@${new_player.id}>`);
+      new_player.thread.send(`<@${new_player.id}>\nList of In-Game Commands can be found [here](https://github.com/JMTNTBANG/The-Card-Game-Bot/wiki/UNO) `);
       var hand = draw_card(7, [], game.deck);
       hand
         .filter((card) => !new_player.hand.includes(card))
