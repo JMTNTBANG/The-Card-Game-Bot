@@ -10,8 +10,10 @@ You will need to setup the bot upon adding it, just run the following configurat
 - `/config uno_category`
 - `/config uno_archive_category`
 
+For more information on what each command does, you can check [here](https://github.com/JMTNTBANG/The-Card-Game-Bot/wiki/UNO#config-commands)
+
 Optional Config Commands are as follows:
-- `/config game_end_delay` (Default 5 Minutes)'
+- `/config game_end_delay` (Default 5 Minutes)
 
 After that the bot will be ready to go!
 
