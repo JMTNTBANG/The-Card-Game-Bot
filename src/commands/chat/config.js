@@ -113,7 +113,7 @@ module.exports = {
     configFile.guildSettings[ctx.guild.id]["game_end_delay"] = duration;
     ctx.reply({
       content: `Successfully Changed the Game End Delay to \`${duration} seconds\``,
-      ephemeral: true
+      ephemeral: true,
     });
     fs.writeFileSync("./src/config.json", JSON.stringify(configFile, "", 2));
   },
