@@ -199,14 +199,34 @@ async function sent_thread_cmd(game, message) {
       } else {
         next_player = 0;
       }
-      var hand = draw_card(2, game.players[next_player].hand, game.deck);
-      hand
-        .filter((card) => !game.players[next_player].hand.includes(card))
-        .forEach((card) => {
-          game.deck.splice(hand.indexOf(card), 1);
-        });
-      game.players[next_player].hand = hand;
-      game.players[next_player].said_uno = false;
+      var cards_to_draw = 2;
+      const draw_cards = game.players[next_player].hand.filter(
+        (card) => card.type == "draw"
+      );
+      var skip_drawing = false;
+      if (game.house_rules.stacking.enabled) {
+        game.house_rules.stacking.current_stack += 2;
+        skip_drawing = true;
+        if (draw_cards == 0) {
+          skip_drawing = false;
+          cards_to_draw = game.house_rules.stacking.current_stack;
+          game.house_rules.stacking.current_stack = 0;
+        }
+      }
+      if (!skip_drawing) {
+        var hand = draw_card(
+          cards_to_draw,
+          game.players[next_player].hand,
+          game.deck
+        );
+        hand
+          .filter((card) => !game.players[next_player].hand.includes(card))
+          .forEach((card) => {
+            game.deck.splice(hand.indexOf(card), 1);
+          });
+        game.players[next_player].hand = hand;
+        game.players[next_player].said_uno = false;
+      }
     }
   }
   game.last_player = game.current_turn;
@@ -230,15 +250,35 @@ async function sent_thread_cmd(game, message) {
       } else {
         next_player = 0;
       }
-      var hand = draw_card(2, game.players[next_player].hand, game.deck);
-      hand
-        .filter((card) => !game.players[next_player].hand.includes(card))
-        .forEach((card) => {
-          game.deck.splice(hand.indexOf(card), 1);
-        });
-      game.players[next_player].hand = hand;
-      game.players[next_player].said_uno = false;
-      game.current_turn = next_player;
+      var cards_to_draw = 2;
+      const draw_cards = game.players[next_player].hand.filter(
+        (card) => card.type == "draw"
+      );
+      var skip_drawing = false;
+      if (game.house_rules.stacking.enabled) {
+        game.house_rules.stacking.current_stack += 2;
+        skip_drawing = true;
+        if (draw_cards == 0) {
+          skip_drawing = false;
+          cards_to_draw = game.house_rules.stacking.current_stack;
+          game.house_rules.stacking.current_stack = 0;
+        }
+      }
+      if (!skip_drawing) {
+        var hand = draw_card(
+          cards_to_draw,
+          game.players[next_player].hand,
+          game.deck
+        );
+        hand
+          .filter((card) => !game.players[next_player].hand.includes(card))
+          .forEach((card) => {
+            game.deck.splice(hand.indexOf(card), 1);
+          });
+        game.players[next_player].hand = hand;
+        game.players[next_player].said_uno = false;
+        game.current_turn = next_player;
+      }
       break;
   }
   game.current_card = card;
@@ -250,10 +290,13 @@ async function sent_thread_cmd(game, message) {
   }
   await show_hands(game);
   await show_current_card(game);
+  if (game.house_rules.stacking.current_stack > 0) {
+    await game.channel.send(`\`Current Stack at ${game.house_rules.stacking.current_stack}\``)
+  }
 }
 
 module.exports = {
-  async start_game(lobby, owner, homeGuild) {
+  async start_game(lobby, stacking_rule, owner) {
     const configFile = JSON.parse(fs.readFileSync("./src/config.json"));
     const guildSettings = configFile.guildSettings[lobby.guild.id];
     const game = {
@@ -263,7 +306,9 @@ module.exports = {
       deck: uno_deck,
       current_turn: 0,
       guild: lobby.guild,
-      bot_home_guild: homeGuild,
+      house_rules: {
+        stacking: { enabled: stacking_rule, current_stack: 0 },
+      },
       archive: guildSettings.uno_archive_category,
       channel: await lobby.guild.channels.create({
         name: `${owner.displayName}s Game`,
@@ -283,7 +328,9 @@ module.exports = {
           type: ChannelType.PrivateThread,
         }),
       };
-      new_player.thread.send(`<@${new_player.id}>\nList of In-Game Commands can be found [here](https://github.com/JMTNTBANG/The-Card-Game-Bot/wiki/UNO) `);
+      new_player.thread.send(
+        `<@${new_player.id}>\nList of In-Game Commands can be found [here](https://github.com/JMTNTBANG/The-Card-Game-Bot/wiki/UNO) `
+      );
       var hand = draw_card(7, [], game.deck);
       hand
         .filter((card) => !new_player.hand.includes(card))

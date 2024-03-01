@@ -18,6 +18,14 @@ module.exports = {
       subcommand
         .setName("new_game")
         .setDescription("Create a New UNO Game")
+        .addBooleanOption((option) =>
+          option
+            .setName("stacking-rule")
+            .setDescription(
+              "Adds the abillity for the next player to add onto a draw card with another draw card"
+            )
+            .setRequired(false)
+        )
         .addIntegerOption((option) =>
           option
             .setName("timer")
@@ -27,7 +35,7 @@ module.exports = {
             .setRequired(false)
         )
     ),
-  async new_game(ctx, timer) {
+  async new_game(ctx, stacking_rule, timer) {
     var embed = new EmbedBuilder()
       .setAuthor({
         name: ctx.user.displayName,
@@ -38,6 +46,10 @@ module.exports = {
       .setTimestamp(new Date(Date.now()))
       .addFields(
         { name: "Player List", value: ctx.user.toString() },
+        {
+          name: "House Rules",
+          value: `Stacking: \`${stacking_rule}\``,
+        },
         {
           name: "Expiration",
           value: `Lobby Expires <t:${Math.floor(Date.now() / 1000 + timer)}:R>`,
@@ -116,7 +128,7 @@ module.exports = {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
           collector.stop();
-          await start_game(lobby, ctx.user);
+          await start_game(lobby, stacking_rule, ctx.user);
         } else {
           await lobby_ctx.reply({
             content: "You did not Create this Game",
@@ -138,6 +150,10 @@ module.exports = {
     ) {
       const subcommand = ctx.options.getSubcommand();
       if (subcommand === "new_game") {
+        var stacking_rule = ctx.options.getBoolean("stacking-rule");
+        if (!stacking_rule) {
+          stacking_rule = false;
+        }
         var timer = ctx.options.getInteger("timer");
         if (!timer) {
           timer = 600;
@@ -149,7 +165,7 @@ module.exports = {
           });
           return;
         }
-        this.new_game(ctx, timer);
+        this.new_game(ctx, stacking_rule, timer);
       }
     } else {
       await ctx.reply({
