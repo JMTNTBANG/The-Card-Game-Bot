@@ -2,6 +2,7 @@ const fs = require("fs");
 const { uno_deck } = require("./static.json");
 const { ChannelType } = require("discord.js");
 const { assets } = require("../config.json");
+const uno = require("../commands/chat/uno");
 
 function print_card(card, text = false) {
   if (card.type == "number" && card.color != "wild") {
@@ -144,7 +145,7 @@ async function sent_game_cmd(game, message) {
 
 async function sent_thread_cmd(game, message) {
   if (game.deck.length == 0) {
-    game.deck = uno_deck;
+    game.deck = uno_deck.slice(0);
   }
   const player = game.players.filter(
     (player) =>
@@ -303,7 +304,7 @@ module.exports = {
       id: lobby.guild.id + "-" + Date.now(),
       owner: owner.id,
       players: [],
-      deck: uno_deck,
+      deck: uno_deck.slice(),
       current_turn: 0,
       guild: lobby.guild,
       house_rules: {
