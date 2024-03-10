@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { uno_deck } = require("./static.json");
-const { ChannelType } = require("discord.js");
+const { ChannelType, EmbedBuilder } = require("discord.js");
 const { assets } = require("../config.json");
 const uno = require("../commands/chat/uno");
 
@@ -243,6 +243,18 @@ async function sent_thread_cmd(game, message) {
       const currentPlayer = game.players[game.current_turn];
       game.players.reverse();
       game.current_turn = game.players.indexOf(currentPlayer);
+      var player_list = ""
+      var i = 0
+      game.players.forEach((player) => { i++; player_list += `\`Player ${i}\`: <@${player.id}>\n`})
+      game.channel
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Player List")
+            .setDescription(player_list),
+        ],
+      })
+      .then((msg) => msg.pin());
       break;
     case "draw":
       var next_player = game.current_turn;
@@ -284,6 +296,44 @@ async function sent_thread_cmd(game, message) {
   }
   game.current_card = card;
   player.hand.splice(player.hand.indexOf(card), 1);
+  if (game.house_rules.seven_zero.enabled) {
+    switch (card.number) {
+      case 0:
+        var hands = [];
+        game.players.forEach((player) => hands.push(player.hand.splice(0)));
+        game.players.forEach(async (player) => {
+          var next_player = game.players.indexOf(player);
+          if (next_player + 1 < game.players.length) {
+            next_player += 1;
+          } else {
+            next_player = 0;
+          }
+          game.players[next_player].hand =
+            hands[game.players.indexOf(player)].splice(0);
+          await player.thread.send(
+            `Your Hand was Given to \`Player ${next_player + 1}\``
+          );
+          await game.players[next_player].thread.send(
+            `You Were Given \`Player ${next_player + 1}\`s Hand`
+          );
+        });
+        await game.channel.send("All Player hands now go to the next person");
+        break;
+      case 7:
+        const current_player_hand =
+          game.players[game.current_turn].hand.splice(0);
+        var current_player = game.players[game.current_turn];
+        var chosen_player = game.players.filter((player) =>
+          message.content.endsWith(`player${game.players.indexOf(player) + 1}`)
+        )[0];
+        if (chosen_player == null) return;
+        current_player.hand = chosen_player.hand.splice(0);
+        chosen_player.hand = current_player_hand;
+        await game.channel.send(
+          `<@${current_player.id}> Swapped hands with <@${chosen_player.id}>`
+        );
+    }
+  }
   if (game.current_turn + 1 < game.players.length) {
     game.current_turn += 1;
   } else {
@@ -292,12 +342,14 @@ async function sent_thread_cmd(game, message) {
   await show_hands(game);
   await show_current_card(game);
   if (game.house_rules.stacking.current_stack > 0) {
-    await game.channel.send(`\`Current Stack at ${game.house_rules.stacking.current_stack}\``)
+    await game.channel.send(
+      `\`Current Stack at ${game.house_rules.stacking.current_stack}\``
+    );
   }
 }
 
 module.exports = {
-  async start_game(lobby, stacking_rule, owner) {
+  async start_game(lobby, stacking_rule, seven_zero_rule, owner) {
     const configFile = JSON.parse(fs.readFileSync("./src/config.json"));
     const guildSettings = configFile.guildSettings[lobby.guild.id];
     const game = {
@@ -309,6 +361,7 @@ module.exports = {
       guild: lobby.guild,
       house_rules: {
         stacking: { enabled: stacking_rule, current_stack: 0 },
+        seven_zero: { enabled: seven_zero_rule },
       },
       archive: guildSettings.uno_archive_category,
       channel: await lobby.guild.channels.create({
@@ -317,6 +370,8 @@ module.exports = {
         parent: guildSettings.uno_category,
       }),
     };
+    var player_list = "";
+    i = 0;
     for (player of lobby.embeds[0].data.fields[0].value.split("\n")) {
       const playerDiscord = await lobby.guild.members.fetch(
         player.slice(2, -1)
@@ -329,6 +384,8 @@ module.exports = {
           type: ChannelType.PrivateThread,
         }),
       };
+      i++;
+      player_list += `\`Player ${i}\`: <@${new_player.id}>\n`;
       new_player.thread.send(
         `<@${new_player.id}>\nList of In-Game Commands can be found [here](https://github.com/JMTNTBANG/The-Card-Game-Bot/wiki/UNO) `
       );
@@ -345,6 +402,15 @@ module.exports = {
     const card = Math.floor(Math.random() * game.deck.length);
     game.current_card = game.deck[card];
     game.deck.splice(card, 1);
+    game.channel
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Player List")
+            .setDescription(player_list),
+        ],
+      })
+      .then((msg) => msg.pin());
     await show_hands(game);
     await show_current_card(game);
     for (player of game.players) {

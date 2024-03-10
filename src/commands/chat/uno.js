@@ -26,6 +26,14 @@ module.exports = {
             )
             .setRequired(false)
         )
+        .addBooleanOption((option) =>
+          option
+            .setName("7-0-rule")
+            .setDescription(
+              "Changes 7 Cards to \"Swap Hands card\" and 0 to \"Move hands forward\" card"
+            )
+            .setRequired(false)
+        )
         .addIntegerOption((option) =>
           option
             .setName("timer")
@@ -35,7 +43,7 @@ module.exports = {
             .setRequired(false)
         )
     ),
-  async new_game(ctx, stacking_rule, timer) {
+  async new_game(ctx, stacking_rule, seven_zero_rule, timer) {
     var embed = new EmbedBuilder()
       .setAuthor({
         name: ctx.user.displayName,
@@ -48,7 +56,7 @@ module.exports = {
         { name: "Player List", value: ctx.user.toString() },
         {
           name: "House Rules",
-          value: `Stacking: \`${stacking_rule}\``,
+          value: `Stacking: \`${stacking_rule}\`\n7-0 Rule: \`${seven_zero_rule}\``,
         },
         {
           name: "Expiration",
@@ -128,7 +136,7 @@ module.exports = {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
           collector.stop();
-          await start_game(lobby, stacking_rule, ctx.user);
+          await start_game(lobby, stacking_rule, seven_zero_rule, ctx.user);
         } else {
           await lobby_ctx.reply({
             content: "You did not Create this Game",
@@ -154,6 +162,10 @@ module.exports = {
         if (!stacking_rule) {
           stacking_rule = false;
         }
+        var seven_zero_rule = ctx.options.getBoolean("7-0-rule");
+        if (!seven_zero_rule) {
+          seven_zero_rule = false;
+        }
         var timer = ctx.options.getInteger("timer");
         if (!timer) {
           timer = 600;
@@ -165,7 +177,7 @@ module.exports = {
           });
           return;
         }
-        this.new_game(ctx, stacking_rule, timer);
+        this.new_game(ctx, stacking_rule, seven_zero_rule, timer);
       }
     } else {
       await ctx.reply({
