@@ -167,6 +167,16 @@ async function sent_thread_cmd(game, message) {
     game.card_counter.edit(
       `\`Current Player has ${player.hand.length} Cards\``
     );
+    if (!game.house_rules.keep_drawing.enabled) {
+      await game.channel.send("Player Drew a Card")
+      if (game.current_turn + 1 < game.players.length) {
+        game.current_turn += 1;
+      } else {
+        game.current_turn = 0;
+      }
+      await show_hands(game);
+      await show_current_card(game);
+    }
   } else;
   const cards = player.hand.filter((card) =>
     message.content.startsWith(
@@ -243,18 +253,21 @@ async function sent_thread_cmd(game, message) {
       const currentPlayer = game.players[game.current_turn];
       game.players.reverse();
       game.current_turn = game.players.indexOf(currentPlayer);
-      var player_list = ""
-      var i = 0
-      game.players.forEach((player) => { i++; player_list += `\`Player ${i}\`: <@${player.id}>\n`})
+      var player_list = "";
+      var i = 0;
+      game.players.forEach((player) => {
+        i++;
+        player_list += `\`Player ${i}\`: <@${player.id}>\n`;
+      });
       game.channel
-      .send({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Player List")
-            .setDescription(player_list),
-        ],
-      })
-      .then((msg) => msg.pin());
+        .send({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Player List")
+              .setDescription(player_list),
+          ],
+        })
+        .then((msg) => msg.pin());
       break;
     case "draw":
       var next_player = game.current_turn;
@@ -349,7 +362,13 @@ async function sent_thread_cmd(game, message) {
 }
 
 module.exports = {
-  async start_game(lobby, stacking_rule, seven_zero_rule, owner) {
+  async start_game(
+    lobby,
+    keep_drawing_rule,
+    stacking_rule,
+    seven_zero_rule,
+    owner
+  ) {
     const configFile = JSON.parse(fs.readFileSync("./src/config.json"));
     const guildSettings = configFile.guildSettings[lobby.guild.id];
     const game = {
@@ -360,6 +379,7 @@ module.exports = {
       current_turn: 0,
       guild: lobby.guild,
       house_rules: {
+        keep_drawing: { enabled: keep_drawing_rule },
         stacking: { enabled: stacking_rule, current_stack: 0 },
         seven_zero: { enabled: seven_zero_rule },
       },
