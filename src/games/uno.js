@@ -103,7 +103,7 @@ async function show_hands(game, definedPlayer = undefined) {
       let row2 = "";
       let i = 0;
       player.hand.forEach((card) => {
-        if (i == 5) {
+        if (player.hand.length <= 15 && i == 5 || player.hand.length > 15 && i == 10) {
           message += `${row1}\n${row2}\n`;
           row1 = "";
           row2 = "";
