@@ -18,6 +18,30 @@ module.exports = {
       subcommand
         .setName("new_game")
         .setDescription("Create a New UNO Game")
+        .addBooleanOption((option) =>
+          option
+            .setName("keep-drawing-rule")
+            .setDescription(
+              "Determines whether a player should keep drawing until they get a valid card"
+            )
+            .setRequired(false)
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("stacking-rule")
+            .setDescription(
+              "Adds the abillity for the next player to add onto a draw card with another draw card"
+            )
+            .setRequired(false)
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("7-0-rule")
+            .setDescription(
+              'Changes 7 Cards to "Swap Hands card" and 0 to "Move hands forward" card'
+            )
+            .setRequired(false)
+        )
         .addIntegerOption((option) =>
           option
             .setName("timer")
@@ -27,7 +51,7 @@ module.exports = {
             .setRequired(false)
         )
     ),
-  async new_game(ctx, timer) {
+  async new_game(ctx, keep_drawing_rule, stacking_rule, seven_zero_rule, timer) {
     var embed = new EmbedBuilder()
       .setAuthor({
         name: ctx.user.displayName,
@@ -38,6 +62,10 @@ module.exports = {
       .setTimestamp(new Date(Date.now()))
       .addFields(
         { name: "Player List", value: ctx.user.toString() },
+        {
+          name: "House Rules",
+          value: `Keep Drawing: \`${keep_drawing_rule}\`\nStacking: \`${stacking_rule}\`\n7-0 Rule: \`${seven_zero_rule}\``,
+        },
         {
           name: "Expiration",
           value: `Lobby Expires <t:${Math.floor(Date.now() / 1000 + timer)}:R>`,
@@ -116,7 +144,13 @@ module.exports = {
         if (lobby_ctx.user == ctx.user) {
           await lobby_ctx.reply("Starting Game...");
           collector.stop();
-          await start_game(lobby, ctx.user);
+          await start_game(
+            lobby,
+            keep_drawing_rule,
+            stacking_rule,
+            seven_zero_rule,
+            ctx.user
+          );
         } else {
           await lobby_ctx.reply({
             content: "You did not Create this Game",
@@ -138,6 +172,18 @@ module.exports = {
     ) {
       const subcommand = ctx.options.getSubcommand();
       if (subcommand === "new_game") {
+        var keep_drawing_rule = ctx.options.getBoolean("keep-drawing-rule");
+        if (!keep_drawing_rule) {
+          keep_drawing_rule = false;
+        }
+        var stacking_rule = ctx.options.getBoolean("stacking-rule");
+        if (!stacking_rule) {
+          stacking_rule = false;
+        }
+        var seven_zero_rule = ctx.options.getBoolean("7-0-rule");
+        if (!seven_zero_rule) {
+          seven_zero_rule = false;
+        }
         var timer = ctx.options.getInteger("timer");
         if (!timer) {
           timer = 600;
@@ -149,7 +195,7 @@ module.exports = {
           });
           return;
         }
-        this.new_game(ctx, timer);
+        this.new_game(ctx, keep_drawing_rule, stacking_rule, seven_zero_rule, timer);
       }
     } else {
       await ctx.reply({
