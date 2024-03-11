@@ -419,6 +419,9 @@ module.exports = {
       new_player.said_uno = false;
       game.players.push(new_player);
     }
+    var chnls_msg = `<#${game.channel.id}>`
+    game.players.forEach((player) => chnls_msg += `\n- <#${player.thread.id}>`)
+    await lobby.channel.send(chnls_msg)
     const card = Math.floor(Math.random() * game.deck.length);
     game.current_card = game.deck[card];
     game.deck.splice(card, 1);
