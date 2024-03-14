@@ -90,7 +90,7 @@ module.exports = {
         reply = "Please Specify a Category ID";
       }
     } else {
-      configFile.guildSettings[ctx.guild.id]["uno_archive_category"] = null;
+      configFile.guildSettings[ctx.guild.id]["uno_archive_category"] = "undefined";
       reply = "Successfully Disabled Game Archival";
     }
     fs.writeFileSync("./src/config.json", JSON.stringify(configFile, "", 2));

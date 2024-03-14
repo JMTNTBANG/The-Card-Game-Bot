@@ -82,7 +82,7 @@ async function show_current_card(game) {
       player.msgCollector.stop();
     }
     setTimeout(function () {
-      if (game.archive != null) {
+      if (game.archive != "undefined") {
         game.channel.edit({ name: `uno-${game.id}`, parent: game.archive });
       } else {
         game.channel.delete({ reason: "Game End" });
